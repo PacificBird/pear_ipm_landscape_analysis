@@ -1,5 +1,5 @@
 # Instructions for IPM analysis
-Izzy McDonald (israel.mcdonald@wsu.edu)
+Izzy McCabe (israel.mcdonald@wsu.edu/izzym@pacificbird.dev)
 
 ## Introduction
 This repository contains the required code and file structure to analyze pear IPM study data and the landscape management factors effects on
@@ -59,7 +59,7 @@ change the format to text, and set the length to 4. Do this for as many years as
 
 To edit the annotations for exiting polygons, press `Ctrl-Shift-i` to switch to the `Identify` tool, and click any polygon; this will open the
 `Identify` panel. In the toolbar at the top of this panel there is a wrench icon that will pull up extra options. Within these, make sure
-`Auto open form for single feature resutls`. Now with the `Identify` tool selected, a form to edit annotations will appear when you click
+`Auto open form for single feature resutls` is checked. Now with the `Identify` tool selected, a form to edit annotations will appear when you click
 on polygons.  
 
 To create new polygons, first select the `Add polygon feature`, or press `Ctrl-,` ![add_polygons](doc/polygons.jpg). Also, go to the top left
@@ -88,10 +88,25 @@ Predator data is collected differently. Take the data (also most likely in excel
 data before July instead of August. There should be three predator columns, named `Trechnites`, `Derae_total`, and `Campy_total`. 
 The site code column should also be named `Plot`.  
 
-Example data in multiple years is included within the `data/` directory.  
+Example data in is included within the `data/` directory.  
 
 ## Analysis
 The `analysis.Rmd` file within this project contains templates for processing the data from the standard formats specified above into the format
 the `zonal_analysis()` function requires to have a coherent output. The `zonal_analysis()` function is actually very versatile. If you have any
 data frame with site coordinates in UTM11 and a corresponding shapefile with a numeric field `conv`, you will be able to get multiple ring buffer
-zonal statistics on it.  
+zonal statistics on it. It returns a list of `spatvector` objects from `terra` that contains the same data you put in, but with an extra `conv`
+field which describes the % of conventional vs. non-conventionally managed land within the buffer. With `tidyterra` you can manipulate these objects 
+just like you would a usual dataframe, and plot them easily in `ggplot` with the `geom_spatvector` and `geom_spatraster` functions. 
+Also included in the file is some sample analyses, such as a t-test to determine if conventional or non-conventional management is more effective,
+fitting linear models to each of the buffer distances between percentage of conventional management and total nymph captures and testing for significance,
+as well as some sample plots.  
+
+There are comments in the document that describe how to use it and what values to change when doing your own analysis. If the syntax in the document is
+unfamiliar, I recommend reading the [tidyverse style guide](https://style.tidyverse.org/) (keeping in mind that I love `purrr`'s `~` anonymous functions
+against their instructions) and reading up on the core packages within the Tidyverse.  
+
+If you are new to Git, make sure you have it installed, and run `git clone https://github.com/PacificBird/pear_ipm_landscape_analysis.git` in the terminal
+at the folder location of your choice to get a local copy of this repository. Alternatively, use
+[GitHub Desktop](https://docs.github.com/en/desktop/installing-and-authenticating-to-github-desktop/installing-github-desktop) or the integrated git tooling
+in your IDE, such as [vscode](https://code.visualstudio.com/docs/sourcecontrol/overview) or [RStudio](https://rfortherestofus.com/2021/02/how-to-use-git-github-with-r).
+If you have any questions, contact me (Izzy McCabe, israel.mcdonald@wsu.edu and/or izzym@pacificbird.dev).
