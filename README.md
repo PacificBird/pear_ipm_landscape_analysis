@@ -45,7 +45,7 @@ associated files to `orchards_utm11` and replace the existing one. In order to f
 layer in the `Layers` panel on the left side of the screen, and then use the key combination `Ctrl-K` to use the locate bar. Search for `Buffer` and
 press enter to select the first result. It should look like this:
 
-![buffer](doc/buffer.jpg){width=100% fig-align="center"}
+![buffer](doc/buffer.jpg)
 
 Set the distance to your desired maximum buffer distance and ensure `Dissolve result` is checked (this combines overlapping boundaries into one).
 Save the layer as a shape file to the `data/boundary/` folder. 
