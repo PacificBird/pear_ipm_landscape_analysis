@@ -1,10 +1,3 @@
----
-format:
-  pdf:
-    pdf-engine: pdflatex
-    dpi: 300
----
-
 # Instructions for IPM analysis
 Izzy McDonald (israel.mcdonald@wsu.edu)
 
