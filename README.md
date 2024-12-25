@@ -2,7 +2,7 @@
 Izzy McDonald (israel.mcdonald@wsu.edu)
 
 ## Introduction
-\indent This repository contains the required code and file structure to analyze pear IPM study data and the landscape management factors effects on
+This repository contains the required code and file structure to analyze pear IPM study data and the landscape management factors effects on
 pear pest populations as collected in the study data. The landscape analysis design is a standard multi-ring buffer approach, where non-overlapping
 zones of specified width are generated around a feature of interest, and landscape statistics within each of those buffers are calculated, allowing
 for analysis to be done on the relationship between landscape statistics, data collected on the features of interest, and buffer distances. For an
