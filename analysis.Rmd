@@ -1,0 +1,114 @@
+---
+title: "IPM Analysis"
+---
+
+```{r libraries}
+library(terra)
+library(sf)
+library(tidyverse)
+library(tidyterra)
+library(plotly)
+```
+
+```{r data}
+year = 2023 # Change this value to the year you are interested in
+orchards = st_read("data/orchards/orchards_utm11.shp") |>
+            vect() |>
+            mutate(conv = as.numeric({{year}} %in% c('CONV','UNKN')))
+info = read.csv('data/pear_siteinfo.csv') |>
+          select(c(str_glue('X{year}'), x, y, Code)) |>
+          rename(conventional = str_glue('X{year}'))
+# Change these files to get the data for the year you are interested in
+taps = read.csv('data/pear_taps_2023.csv') # data pre-filtered to before August
+brushes = read.csv('data/pear_leafbrush_2023.csv') # before July
+```
+
+```{r data_setup}
+nymphs = brushes |>
+          group_by(Plot) |>
+          summarise(nymphs=sum(Nymphs))
+preds = taps |>
+          group_by(Plot) |>
+          summarise(
+                    trechnites=sum(Trechnites),
+                    derae=sum(Derae_total),
+                    campy=sum(Campy_total)
+          )
+ipm = info |>
+          inner_join(nymphs, join_by(Code == Plot)) |>
+          inner_join(preds, join_by(Code == Plot)) |>
+          mutate(preds = trechnites + derae + campy,
+                 conventional = as.logical(conventional))
+```
+```{r new_pipeline, warning = FALSE, message = FALSE}
+source('zonal_analysis.R')
+
+buff_width = 20 # This specifies the radial width of the buffer rings
+# The first number is the lower bound for the buffers in meters
+# The second number is the upper bound for the buffers in meters
+buffs <- seq(200,1000,buff_width)
+data.zone <- zonal_analysis(ipm, orchards, buffs, buff_width, map = TRUE)
+```
+  
+Dark blue (non-exhaustively) represents conventionally managed orchards. 
+Black dots represent study sites, and black areas represent a 1km buffer from those sites.
+
+```{r t.test}
+data.zone[[1]] |> t.test(nymphs ~ conventional, data = _)
+```
+The t-test does not find enough evidence to support the hypothesis that the conventional and non-conventional
+study sites have an equal amount of scylla nymphs. Therefore, it appears as though organic and IPM orchards
+do indeed have a lower nymph population overall. It seems beneficial to _not_ apply pesticides.
+
+```{r nymph_modeling}
+data.nonconv <- data.zone |> map(~filter(.,!conventional))
+data.conv <- data.zone |> map(~filter(.,conventional))
+linear.models.nonconv <- data.nonconv |>
+                         map(~lm(nymphs ~ conv, data=.))
+pvalues.nonconv <- linear.models.nonconv |>
+                   map(~summary(.)$coefficients[2,4])
+pvalues.nonconv |> map(~round(.,digits = 3)) |> flatten_dbl()
+pvalues.nonconv |> flatten_dbl() |>  {\(x) x < 0.05}()
+pvalues.nonconv |> flatten_dbl() |>  {\(x) x < 0.10}()
+```
+There aren't any significant linear relationships between % of conventionally managed land around the nonconventional study sites
+when considering non-overlapping 20m wide ring buffers between 200m and 1000m at a signifiance level of 0.05 or 0.10.
+```{r plots_nymph}
+plots_nymph <- list(data.nonconv,data.conv) |>
+  map2(
+    c('Nonconventional', 'Conventional'),
+    ~{
+        .x |>
+        map(as.data.frame) |>
+        setNames(buffs) |>
+        bind_rows(.id = 'id') |>
+        mutate(id = as.numeric(id)) |>
+        ggplot() +
+        geom_point(mapping = aes(x=conv,y=nymphs,color=id)) +
+        labs(color = 'buffer size (m) \n') +
+        ggtitle(.y) +
+        theme_bw()
+  })
+
+plots_nymph[[1]]
+plots_nymph[[2]]
+```
+
+```{r a few individual plots}
+data.nonconv |>
+  tail(n=1) |>
+  as.data.frame() |>
+  ggplot() +
+  ggtitle('1000m ring buffer (20m wide)') +
+  geom_point(aes(x=conv,y=nymphs))
+data.nonconv[[16]] |>
+  as.data.frame() |>
+  ggplot() +
+  ggtitle('500m ring buffer (20m wide)') +
+  geom_point(aes(x=conv,y=nymphs))
+data.nonconv[[1]] |>
+  as.data.frame() |>
+  ggplot() +
+  ggtitle('200m ring buffer (20m wide)') +
+  geom_point(aes(x=conv,y=nymphs))
+```
